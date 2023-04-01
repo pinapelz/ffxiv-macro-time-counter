@@ -1,5 +1,4 @@
 from flask import Flask, request
-from datetime import timedelta
 
 app = Flask(__name__)
 
@@ -103,12 +102,10 @@ def count_macro_time():
 def generate_output(minutes, seconds, num_executions, macro_text):
     total_seconds = (minutes * 60) + seconds
     num_executions = int(num_executions)
-    total_time = timedelta(seconds=total_seconds * num_executions)
-    # report ack in x hours y minutes z seconds
-    hours = total_time.seconds // 3600
-    minutes = (total_time.seconds // 60) % 60
-    seconds = total_time.seconds % 60
-    total_time_str = f'{hours} hours {minutes} minutes {seconds} seconds'
+    hours = int(total_seconds // 3600)
+    minutes = int((total_seconds % 3600) // 60)
+    seconds = int(total_seconds % 60)
+    total_time_str = f'{int(hours)} hours {int(minutes)} minutes {int(seconds)} seconds'
 
     return f"""
 <!DOCTYPE html>
@@ -167,7 +164,13 @@ def generate_output(minutes, seconds, num_executions, macro_text):
         input[type="submit"]:hover {{
             background-color: #3e8e41;
         }}
-
+        input[type=number] {{
+            width: 80px;
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+        }}
         .output {{
             text-align: center;
             font-size: 1.2rem;
@@ -185,7 +188,7 @@ def generate_output(minutes, seconds, num_executions, macro_text):
             <textarea name="macro-text" rows="10" cols="50">{macro_text}</textarea>
             <label for="num-executions">Number of Executions:</label>
             <input type="number" id="num-executions" name="num-executions" min="1" value="{num_executions}">
-            <br>
+            <div></div>
             <input type="submit" value="Calculate">
         </form>
         <div class="output">
