@@ -75,21 +75,94 @@ def count_macro_time():
         if '<wait.' in line:
             wait_time = int(line.split('<wait.')[1].split('>')[0])
             total_wait_time += wait_time
+        elif line.startswith('/wait '):
+            wait_time = int(line.split('/wait ')[1])
+            total_wait_time += wait_time
+
     minutes, seconds = divmod(total_wait_time, 60)
     return generate_output(minutes=minutes, seconds=seconds)
 
 def generate_output(minutes, seconds):
     return f"""
 <!DOCTYPE html>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Count FFXIV Macro Times</title>
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f7;
+            margin: 0;
+            padding: 0;
+        }}
+
+        .container {{
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }}
+
+        h1 {{
+            font-size: 2rem;
+            text-align: center;
+            margin-top: 0;
+        }}
+
+        form {{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }}
+
+        textarea {{
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 10px;
+            font-size: 1.2rem;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            resize: vertical;
+        }}
+
+        input[type="submit"] {{
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }}
+
+        input[type="submit"]:hover {{
+            background-color: #3e8e41;
+        }}
+
+        .output {{
+            text-align: center;
+            font-size: 1.2rem;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }}
+    </style>
 </head>
 <body>
-    <h1>Total Wait Time:</h1>
-    <p>{minutes} minutes, {seconds} seconds</p>
+    <div class="container">
+        <h1>Count FFXIV Macro Times</h1>
+        <form method="POST" action="/count-macro-time">
+            <textarea name="macro-text" rows="10" cols="50"></textarea>
+            <input type="submit" value="Count Time">
+        </form>
+        <div class="output">
+            <h2>Total Wait Time:</h2>
+            <p>{minutes} minutes, {seconds} seconds</p>
+        </div>
+    </div>
 </body>
 </html>
 """
-
