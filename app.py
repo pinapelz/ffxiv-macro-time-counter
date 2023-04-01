@@ -1,4 +1,5 @@
 from flask import Flask, request
+from datetime import timedelta
 
 app = Flask(__name__)
 
@@ -54,6 +55,18 @@ def main_page():
             color: #333;
             text-align: center;
         }
+        label {
+            font-size: 16px;
+            color: #333;
+            margin-right: 10px;
+        }
+        input[type=number] {
+            width: 80px;
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
@@ -61,16 +74,21 @@ def main_page():
     <form method="POST" action="/count-macro-time">
         <textarea name="macro-text" rows="10" cols="50" placeholder="Enter your FFXIV macro here"></textarea>
         <br>
-        <input type="submit" value="Count Time">
+        <label for="num-executions">Number of executions:</label>
+        <input type="number" name="num-executions" id="num-executions" min="1" value="1">
+        <br>
+        <input type="submit" value="Calculate">
     </form>
 </body>
 </html>
 """
 
+
 @app.route('/count-macro-time', methods=['POST'])
 def count_macro_time():
     macro_text = request.form['macro-text']
     total_wait_time = 0
+    num_executions = request.form.get('num-executions', 1) # set default value to 1
     for line in macro_text.splitlines():
         if '<wait.' in line:
             wait_time = int(line.split('<wait.')[1].split('>')[0])
@@ -79,10 +97,19 @@ def count_macro_time():
             wait_time = int(line.split('/wait ')[1])
             total_wait_time += wait_time
 
-    minutes, seconds = divmod(total_wait_time, 60)
-    return generate_output(minutes=minutes, seconds=seconds)
+    minutes, seconds = divmod(total_wait_time * int(num_executions), 60)
+    return generate_output(minutes=minutes, seconds=seconds, num_executions=num_executions, macro_text=macro_text)
 
-def generate_output(minutes, seconds):
+def generate_output(minutes, seconds, num_executions, macro_text):
+    total_seconds = (minutes * 60) + seconds
+    num_executions = int(num_executions)
+    total_time = timedelta(seconds=total_seconds * num_executions)
+    # report ack in x hours y minutes z seconds
+    hours = total_time.seconds // 3600
+    minutes = (total_time.seconds // 60) % 60
+    seconds = total_time.seconds % 60
+    total_time_str = f'{hours} hours {minutes} minutes {seconds} seconds'
+
     return f"""
 <!DOCTYPE html>
 <html>
@@ -155,12 +182,15 @@ def generate_output(minutes, seconds):
     <div class="container">
         <h1>Count FFXIV Macro Times</h1>
         <form method="POST" action="/count-macro-time">
-            <textarea name="macro-text" rows="10" cols="50"></textarea>
-            <input type="submit" value="Count Time">
+            <textarea name="macro-text" rows="10" cols="50">{macro_text}</textarea>
+            <label for="num-executions">Number of Executions:</label>
+            <input type="number" id="num-executions" name="num-executions" min="1" value="{num_executions}">
+            <br>
+            <input type="submit" value="Calculate">
         </form>
         <div class="output">
-            <h2>Total Wait Time:</h2>
-            <p>{minutes} minutes, {seconds} seconds</p>
+            <h2>Total Time:</h2>
+            <p>{num_executions} craft(s) will take {total_time_str}</p>
         </div>
     </div>
 </body>
